@@ -230,6 +230,15 @@ struct PerfEventBlock {
    }
 
    ~PerfEventBlock() {
+       // destroying the string created via header.str() crashes for some reason.
+       // they are deallocated via jemalloc even though the allocation apparently does not come from there.
+       // This union just leaks the string, avoiding the issue
+       union Forget {
+           std::string str;
+           Forget(std::string s) : str(std::move(s)) {}
+           ~Forget() {}
+       };
+
       e.stopCounters();
       std::stringstream header;
       std::stringstream data;
@@ -238,7 +247,8 @@ struct PerfEventBlock {
       PerfEvent::printCounter(header,data,"time_us",e.getDurationMicros());
       e.printReport(header, data, scale);
       if (e.printHeader) {
-         std::cout << header.str() << std::endl;
+         Forget header_str = header.str();
+         std::cout << header_str.str << std::endl;
          e.printHeader = false;
       }
       std::cout << data.str() << std::endl;
