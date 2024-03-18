@@ -251,7 +251,8 @@ struct PerfEventBlock {
          std::cout << header_str.str << std::endl;
          e.printHeader = false;
       }
-      std::cout << data.str() << std::endl;
+      Forget data_str = data.str();
+      std::cout << data_str.str << std::endl;
    }
 };
 
